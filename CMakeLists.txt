@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
+set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
 project(brain)
 
 ## Find catkin macros and libraries
@@ -104,8 +105,8 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-# add_executable(brain_node src/brain_node.cpp)
-
+add_executable(brain_node src/brain_node.cpp)
+target_link_libraries(brain_node ${catkin_LIBRARIES})
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(brain_node brain_generate_messages_cpp)
