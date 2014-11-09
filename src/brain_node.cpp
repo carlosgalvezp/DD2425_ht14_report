@@ -7,7 +7,6 @@
 #include "ras_utils/node_communication.h"
 #include "std_msgs/String.h"
 
-
 #define PUBLISH_RATE    10      //TODO: Maybe lower?
 #define QUEUE_SIZE      1000
 
@@ -27,12 +26,10 @@ private:
     // ** Subscribers
     ros::Subscriber adc_sub_;
 
-    // ** Services
-    ros::ServiceClient srv_out_;
-    ros::ServiceServer srv_in_;
-
     // ** Callbacks
     void adcCallback(const ras_arduino_msgs::ADConverter::ConstPtr &msg);
+
+    // Service callback
     bool srvCallback(ras_srv_msgs::Command::Request &req, ras_srv_msgs::Command::Response &resp);
 
     double front_right_distance_;
@@ -43,20 +40,19 @@ private:
     double back_distance_;
 
     bool isCloseToWall();
-    bool communicate(const std::string &srv_name, int command);
 
 };
 
 int main (int argc, char* argv[])
 {
     // ** Init node
-    ros::init(argc, argv, "brain");
+    ros::init(argc, argv, NODE_BRAIN);
 
     // ** Create wall follower object
     Brain brain;
 
     // ** Run
-//    brain.run();
+    brain.run();
     ros::spin();
 }
 
@@ -66,46 +62,34 @@ Brain::Brain()
     activate_node_pub_ = n.advertise<std_msgs::String>(ACTIVATE_NODE_TOPIC_NAME, QUEUE_SIZE);
 
     // Subscriber
-    adc_sub_ = n.subscribe("/arduino/adc", QUEUE_SIZE,  &Brain::adcCallback, this);
+    adc_sub_ = n.subscribe(TOPIC_ARDUINO_ADC, QUEUE_SIZE,  &Brain::adcCallback, this);
 
     // Services
-    srv_in_ = n.advertiseService("/brain/comm", &Brain::srvCallback, this);
+    srv_in_ = n.advertiseService(SRV_BRAIN_IN, &Brain::srvCallback, this);
 }
 
 void Brain::run()
 {
     ros::Rate loop_rate(PUBLISH_RATE);
     bool close_to_wall;
+    int i = 0;
     while(ros::ok())
     {
-        close_to_wall = isCloseToWall();
-
+//        close_to_wall = isCloseToWall();
+        if(communicate(SRV_NAVIGATION_IN, (i%2)+1))
+            ROS_INFO("BRAIN communicates");
+        else
+            ROS_ERROR("CANT COMMUNICATE");
         // ** Sleep
         ros::spinOnce();
         loop_rate.sleep();
+        i++;
     }
 }
 
 bool Brain::isCloseToWall()
 {
 
-}
-
-bool Brain::communicate(const std::string &srv_name, int command)
-{
-    srv_out_ = n.serviceClient<ras_srv_msgs::Command>(srv_name);
-    ras_srv_msgs::Command message;
-    message.request.command = command;
-    if (srv_out_.call(message))
-    {
-        // Do something with the response, if required
-        return true;
-    }
-      else
-      {
-        ROS_ERROR("Failed to call service on %s with command %u", srv_name.c_str(), command);
-        return false;
-      }
 }
 
 void Brain::adcCallback(const ras_arduino_msgs::ADConverter::ConstPtr& msg)
