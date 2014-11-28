@@ -83,6 +83,7 @@ bool Brain::isCloseToWall()
 
 void Brain::adcCallback(const ras_arduino_msgs::ADConverter::ConstPtr& msg)
 {
+    /*
     front_right_distance_ = RAS_Utils::shortSensorToDistanceInCM(msg->ch4);
     back_right_distance_ = RAS_Utils::shortSensorToDistanceInCM(msg->ch3);
 
@@ -93,5 +94,6 @@ void Brain::adcCallback(const ras_arduino_msgs::ADConverter::ConstPtr& msg)
     // TODO: Will probably need longSensorToDistanceInCM to work as intended
     front_distance_ = RAS_Utils::shortSensorToDistanceInCM(msg->ch5);
     back_distance_ = RAS_Utils::shortSensorToDistanceInCM(msg->ch6);
+    */
 
 }
