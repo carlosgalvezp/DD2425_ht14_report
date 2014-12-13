@@ -5,7 +5,6 @@
 
 \usepackage[top=30mm, bottom=30mm, left=20mm, right=20mm, columnsep=20pt]{geometry} % Document margins
 \usepackage[colorlinks,bookmarks=false]{hyperref}
-\hypersetup{linkcolor=black}
 
 \usepackage[utf8]{inputenc}  
 \usepackage[english]{babel}    
@@ -15,6 +14,13 @@
 \usepackage{amssymb}
 \usepackage{listings}
 \usepackage{epstopdf}
+
+\usepackage[backend=bibtex,sorting=none,firstinits=true,maxbibnames=999,isbn=false,doi=false]{biblatex}
+\addbibresource{report.bib}
+
+%===============================================================================
+%===============================================================================
+
 
 \begin{document}
 
@@ -67,8 +73,10 @@ Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract
 \end{titlepage}
 
 %===============================================================================
-
+\begingroup
+\hypersetup{linkcolor=black}
 \tableofcontents
+\endgroup
 \newpage
 
 %===============================================================================
@@ -76,10 +84,8 @@ Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract
 \input{./sections/introduction.tex}
 
 %===============================================================================
-
-
-%===============================================================================
-
+\section{Mechanical design \label{sec:Mechanics}}
+\input{./sections/mechanics.tex}
 
 %===============================================================================
 
@@ -87,5 +93,8 @@ Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract
 %===============================================================================
 
 
+%===============================================================================
+\newpage
+\printbibliography 
 
 \end{document}

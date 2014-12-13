@@ -4,5 +4,10 @@
 *.gz
 *.dvi
 *.toc
+*.bbl
+*-blx.bib
+*.blg
+*.xml
+
 
 *~
