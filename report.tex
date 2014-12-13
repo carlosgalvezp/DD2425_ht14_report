@@ -15,62 +15,14 @@
 \usepackage{listings}
 \usepackage{epstopdf}
 
-\usepackage[backend=bibtex,sorting=none,firstinits=true,maxbibnames=999,isbn=false,doi=false]{biblatex}
+\usepackage[backend=bibtex,sorting=none,firstinits=true,isbn=false,doi=false]{biblatex}
 \addbibresource{report.bib}
 
 %===============================================================================
 %===============================================================================
-
-
 \begin{document}
 
-\begin{titlepage}
-\date{}
-\begin{figure}
-\centering
-\includegraphics[scale=0.35]{figures/KTH_Logo.png}
-\end{figure}
-\title{
-\vspace{-1cm}
-\textsc{DD2425 - Robotics and Autonomous Systems}
-\\
-\vspace{0.5cm}
-\textsc{Group 6}\\
-{\large \today}
-\begin{center}
-\rule{\linewidth}{0.5mm}
-\textbf{Project Report}
-\rule{\linewidth}{0.5mm}
-\end{center}
-}
-\maketitle
-\vspace{-2cm}
-\begin{figure}[h]
-\centering
-\begin{minipage}[b]{0.3\linewidth}
-                \begin{flushleft}
-\normalsize{
-\emph{Authors}\\
-\vspace{0.5cm}
-Carlos \textsc{Gálvez del Postigo} \\
-Mathias \textsc{Lindblom} \\
-Tingyu \textsc{Liu} \\
-Gundars \textsc{Kalns}
-}
-\end{flushleft}
-\end{minipage}
-\qquad
-\quad
-\begin{minipage}[b]{0.62\linewidth}
-                \includegraphics[width=\linewidth]{figures/robot.jpg}
-\end{minipage}
-\end{figure}
-\vspace{1cm}
-\thispagestyle{empty}
-\begin{abstract}
-Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract  Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract Abstract 
-\end{abstract}
-\end{titlepage}
+\input{./sections/title.tex}
 
 %===============================================================================
 \begingroup
