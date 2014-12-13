@@ -1,0 +1,8 @@
+#Latex stuff
+*.aux
+*.log
+*.gz
+*.dvi
+*.toc
+
+*~
