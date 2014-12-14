@@ -18,6 +18,8 @@
 \usepackage[backend=bibtex,sorting=none,firstinits=true,isbn=false,doi=false]{biblatex}
 \addbibresource{report.bib}
 
+\newcommand{\etal}{\emph{et al}.}
+
 %===============================================================================
 %===============================================================================
 \begin{document}
@@ -32,18 +34,44 @@
 \newpage
 
 %===============================================================================
+
 \section{Introduction\label{sec:Introduction}}
 \input{./sections/introduction.tex}
 
 %===============================================================================
+
 \section{Mechanical design \label{sec:Mechanics}}
 \input{./sections/mechanics.tex}
 
 %===============================================================================
 
+\section{Electronics}
+\input{./sections/electronics.tex}
 
 %===============================================================================
 
+\section{Motion control}
+\input{./sections/motion_control.tex}
+
+%===============================================================================
+
+\section{Software}
+\input{./sections/software.tex}
+
+%===============================================================================
+
+\section{Computer Vision}
+\input{./sections/vision.tex}
+
+%===============================================================================
+
+\section{Discussion}
+\input{./sections/discussion.tex}
+
+%===============================================================================
+
+\section{Conclusions}
+\input{./sections/conclusions.tex}
 
 %===============================================================================
 \newpage
