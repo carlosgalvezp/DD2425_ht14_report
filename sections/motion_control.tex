@@ -1,1 +1,1 @@
-Motion control
+In motors pwm input vs speed relation is highly non-linear and depends on many factors. Use of motor controller therefore is crucial. In this project PID controller is used for motion control. The purpose of motor controller node is to control PWM values for motors according to input linear and angular speeds. It adds abstraction layer for motors so in higher level nodes we can just care about sending desired linear and angular speeds to motors.

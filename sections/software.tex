@@ -1,7 +1,30 @@
+In this project ROS software is used. It creates good and feature rich environment for simple nodes which can easily communicate to each other.
+
 \subsection{Global picture}
 \subsection{Odometry}
+
+Odometry node takes raw data from motor encoders and translates it into global coordinates and angle according to equations \ref{eq:odometry_eq}. This data can be used for mapping and localization. Problem with odometry is that it tends to drift especially when speed increases.
+
+\label{eq:odometry_eq}
+\begin{align}
+distance _{left} = \frac{2\pi * Wheel radius * encoder _{left}}{ticks  per  revolution}  \\
+distance _{right} = \frac{2\pi * Wheel radius * encoder _{right}}{ticks  per  revolution} \\
+\Delta x = \frac{distance _{left} + distance _{right}}{2} * cos(\Phi) \\
+\Delta y = \frac{distance _{left} + distance _{right}}{2} * sin(\Phi) \\
+\Delta \Phi = \frac{distance _{left} - distance _{right}}{Wheelbase}
+\end{align}
+
+
+
+
 \subsection{Mapping}
+
+For map we chose to use occupancy grid package from ROS. IR sensors provide data about distances to the walls. This data together with position information from odometry node are used to make a map. Initially all area is unknown and by driving around and getting corresponding data from IR sensors free area and obstacles are detected and drawn in map. Data from sensors are quite noisy therefore some processing is needed to mitigate noisy results.
+
 \subsection{Exploration}
+
+For exploration there was created navigation node. 
+
 \subsubsection{Wall following}
 \subsubsection{BFS Search}
 \subsection{Path planning}
