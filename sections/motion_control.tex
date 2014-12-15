@@ -1,1 +1,12 @@
-In motors pwm input vs speed relation is highly non-linear and depends on many factors. Use of motor controller therefore is crucial. In this project PID controller is used for motion control. The purpose of motor controller node is to control PWM values for motors according to input linear and angular speeds. It adds abstraction layer for motors so in higher level nodes we can just care about sending desired linear and angular speeds to motors.
+To be able to reliably use motors instead of sending just PWM data to motors there needs to be a node which translates linear and angular speeds to necessary PWM values. However as PWM vs speed relation is highly non-linear and depends on many factors such as ground friction it is not possible to just find suitable function for translating speed to PWM. Use of motor controller is therefore crucial. Its task is to control PWM values at the same time getting feedback from encoders. This data then can be used to adjust PWM values so that motor reaches the necessary speed and keeps it. In this project PID controller is used for motor control. Equation \ref{eq:pid_equation} shows general PID controller algorithm. In case of motor controller error e(t) is difference between desired angular speed and current angular speed which can be calculated with equation \ref{eq:pid_error}. N describes ticks per revolution.
+
+\begin{align}
+\label{eq:pid_equation}
+u(t) = K_p e(t) + K_i \int_{0}^{t} e(\tau) d\tau + K_d \frac{de(t)}{dt} 
+\end{align}
+\begin{align}
+\label{eq:pid_error}
+\omega (t) = \frac{2 \pi \Delta encoder}{\Delta t * N}
+\end{align}
+
+With PID controller it is very important to find right parameters otherwise motion can be with oscillations, too slowly rising or could have other problems. 
