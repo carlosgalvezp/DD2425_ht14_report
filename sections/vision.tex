@@ -81,8 +81,7 @@ R(\phi^R) & \textbf{0}\\
 
 \subsection{Object detection}
 \label{sec:Object detection}
-The core of the computer vision component is divided into two modules. Object detection is mean to be fast (close to real-time computing time) and robust. Therefore, our aim was to optimize it as much as possible. The object detection pipeline is presented in Figure XXXXXX.
-
+The core of the computer vision component is divided into two modules. Object detection is mean to be fast (close to real-time computing time) and robust. Therefore, our aim was to optimize it as much as possible. The following pipeline was implemented.
 
 \begin{enumerate}
 \item First, we subscribe to the RGB and Depth images from the camera (for which we use the \texttt{ApproximateTime} and \texttt{Synchronizer} packages in ROS) and build a point cloud out of them. The reason for doing this is that for some reason the PrimeSense did not publish its own point cloud at a fixed rate, and it was quite far from 30 Hz (e.g.: every 200 ms or so), which was unacceptable. To make it faster, we downsampled the images by a factor of 4 in X and Y. For transforming points from 2D to 3D, we reverted the projection equation, as shown in Equation \ref{eq:2dto3d}.
@@ -106,8 +105,25 @@ If a contour still remains, it is likely that it belongs to an object. The bigge
 
 \item In case a contour belonging to a coloured object was found, we compute the 3D position of its mass center both in robot and world coordinates. If the object has not been recognized yet, and if it is close enough to the robot (less than 30 cm from it), the recognition module is called.
 
-XXXXX Images from the process
 \end{enumerate}
+Figure \ref{fig:detection} shows the process.
+
+\begin{figure}[h]
+        \centering
+        \begin{subfigure}[b]{0.3\linewidth}
+                \includegraphics[height=3cm]{figures/RGB.png}
+                \subcaption{Original RGB image}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.3\linewidth}
+                \includegraphics[height=3cm]{figures/no_floor_mask.jpg}
+                \caption{Inverse of the floor mask}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.3\linewidth}
+                \includegraphics[height=3cm]{figures/object_mask.jpg}
+                \caption{Object mask}
+        \end{subfigure}
+        \caption{Detection process}
+\end{figure}
 
 \subsection{Object recognition}
 A different number of approaches for object recognition have been tried. We decided to have a parallel research in both 2D and 3D methods for object recognition to analyze their advantages and disadvantages. 
@@ -127,12 +143,12 @@ The 2D vision contains 3 functions, one for circle recognition, one for triangle
 \begin{figure}[h]
         \centering
         \begin{subfigure}[b]{0.4\linewidth}
-                \includegraphics[width=\textwidth]{figures/canny.jpg}
+                \includegraphics[height=4cm]{figures/canny.jpg}
                 \subcaption{Canny method to find lines and contours.}
                 \label{fig:ryan1}
         \end{subfigure}
         \begin{subfigure}[b]{0.4\linewidth}
-                \includegraphics[width=\textwidth]{figures/squares.jpg}
+                \includegraphics[height=4cm]{figures/squares.jpg}
                 \caption{Found squares}
                 \label{fig:ryan2}
         \end{subfigure}

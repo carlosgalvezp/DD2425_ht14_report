@@ -1,6 +1,13 @@
 In this project ROS software is used. It creates good and feature rich environment for simple nodes which can easily communicate to each other.
 
 \subsection{Global picture}
+The overall block diagram of the system is presented in Figure \ref{fig:global}. Each of them will be explained in more detail in the following pages.
+\begin{figure}[h]    
+\centering    
+                \includegraphics[trim = 0mm 40mm 60mm 0mm, clip, width=.7\textwidth]{figures/Global.pdf}
+                \caption{Block diagram of the system}
+                \label{fig:global}
+\end{figure}
 \subsection{Odometry}
 
 Odometry node takes raw data from motor encoders and translates it into global coordinates and angle according to equations \ref{eq:odometry_eq}. This data can be used for mapping and localization. Problem with odometry is that it tends to drift especially when speed increases.
@@ -65,7 +72,7 @@ For navigation the navigation node was created. We wanted to be able explore the
 The setup was quite straight forward. We tuned 3 PID’s. One was simply for following the wall. The other was for keeping a certain distance to a wall. The third was to turn as close as possible to 90-degrees. Everything actually worked pretty great and we had this setup for the first milestones. However when we started building the topological map we realized that it will be very hard to try to explore the entire maze. Questions started to arise such as how will we handle large open areas? How to deal with multiple entrances next to each other that are only separated by a slim wall segment? We realized that this might get quite complex quickly. So we chose to disband this form of navigation in favor of a more general solution.
 
 \subsubsection{Path planning}
-The path planner has a separate node since it can take up to 1 second to compute the path on a maze of size 16 m². The path planner is essentially a greedy best-first search trough the cost map and thick map. How the path planner finds a path to a unknown cell looks as following:
+The path planner has a separate node since it can take up to 1 second to compute the path on a maze of size 16 $\text{m}^2$. The path planner is essentially a greedy best-first search trough the cost map and thick map. How the path planner finds a path to a unknown looks as following:
 
 \begin{enumerate}
 \item Start the greedy best-first search from the robots front position using the cost map.
