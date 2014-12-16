@@ -69,3 +69,49 @@ This implementation gave excellent results, with nearly optimal solutions under 
 
 
 \subsection{Localization}
+Given the lack of time for the project, it was not possible to achieve a fully working localization module, which was really an impediment for running Phase 2. The following solutions were tested.
+
+\subsubsection{EKF Localization}
+Following the theory from the Applied Estimation course (XXX REF), we found out that a good solution was to use an Extended Kalman Filter (XXXX REF) to solve this problem. It would use as input $u$ the data from the encoders, and the measurements would come from a \emph{range-and-bearing} sensor, which provides the distance and angle to a recognized object in the map relative to the robot, as shown in Figure XXXX.
+
+The implementation followed the instructions in XXXXX REF, but the results were not so good. A really large process noise ($Q$) and really low measurement noise ($R$) was required to notice some updated in the position. However, we discarded this idea when we realized that the localization could be non-unique: the same $\theta$ and $\rho$ could be obtained at any position on a circle of radius $\rho$ around the object, given a proper orientation for the robot. In addition, the object's position would not be stable enough to heavily rely on this information. 
+
+\subsubsection{Theta correction}
+A solution which did work was to compute the actual orientation of the robot from it's orientation with respect to the wall. This can be shown in Figure XXXXX
+
+
+From this, the difference in angle, $\Delta\theta$, can be computed as:
+\begin{align}
+\label{eq:locTheta}
+\Delta\theta = \tan^{-1}\left(\frac{d_2 - d_1}{D}\right)
+\end{align}
+
+Finally, we assume the robot has an orientation $\theta0 \in \{-\pi, -\pi/2, 0, \pi/2, \pi\}$, so the final pose estimate is given by: $\theta = \theta0 + \Delta\theta$.
+
+This was applied when starting the robot and it worked pretty well; however this could not be applied afterwards since wall following or 90-degree turning were not used in the end in favour of just path following.  
+
+\subsubsection{On-line localization}
+Finally, we implemented a promising idea for localization, but we did not have the time to test and debug it properly. The algorithm is as follows:
+
+\begin{itemize}
+\item The current pose estimate ${x_0, y_0, theta_0}$ and a map (occupancy grid) are given.
+
+\item The orientation ($\theta$) is updated according to the previous section.
+
+\item We define a search region around the current pose estimate in X and Y coordinates (e.g.: a square of $10\times10$ cm.
+\item Every position $\{x,y\}$ inside that region (within some discretization margin) is assigned a cost based the current sensor readings and the map, according to Equation \ref{eq:localization}.
+\begin{align}
+\label{eq:localization}
+J(x,y) = \sum_{i = 1}^6 (z_i - \hat{z}_i)
+\end{align}
+, where $z_i$ is the current sensor reading for the $i$th sensor reading, and $\hat{z}_i$ is the \emph{expected} sensor reading from the position $\{x,y\}$. This is done by raycasting from every sensor position to the saved map.
+
+\item The new position is updated as follows:
+\begin{align}
+\{x,y\} = \arg\max_{x,y}J(x,y)
+\end{align}
+
+\end{itemize}
+
+
+This approach would give the optimal robot position assuming that the saved map was perfect and we were given perfect sensor readings. Unfortunately this was not the case. In addition, another challenging question is when to run this procedure. Ideally, it would be better to run it after 90-degree turns, but again that was not used in the robot anymore. We are confident that a little bit more time to improve this and test would have probably resulted in satisfactory results.
