@@ -1,4 +1,115 @@
+Another big part of the project involves Computer Vision, allowing the robot to detect and identify objects in the maze. The task is subdivided into smaller subtasks that are now discussed.
+
 \subsection{Camera extrinsic calibration}
+First, a camera extrinsic calibration is required in order to be able to express measurements in camera frame (\texttt{camera-link}) into the \texttt{world} frame. In this process, a 6 DoF transform is computed. Given that the transformation between \texttt{world} and \texttt{robot} is computed by the \texttt{odometry} node, it is natural to compute here the transformation between \texttt{robot} and \texttt{camera-link}. Then, it is easy to just use the \texttt{tf} package to transform between coordinate frames.
+
+In this particular case, we only compute 4 out of the 6 DoF of the pose, since we assume the roll and yaw of the camera to be 0. Therefore, we only compute the pitch ($\phi$) and the translation vector $\textbf{t}$.\\
+\textbf{Pitch}\\
+To estimate the pitch, we first take the Point Cloud published by the PrimeSense camera and extract the main plane, corresponding to the floor. Then, the normal vector $\textbf{n}$ is computed. Finally, we extract the pitch of the camera from Equation \ref{eq:pitch}.
+
+\begin{align}
+\label{eq:pitch}
+\phi = \cos^{-1}|n_y|
+\end{align}
+
+\textbf{Translation}
+To compute the translation vector $\textbf{t} = \{t_x, t_y, t_z\}^T$, we take into account the transformation equation \ref{eq:homogeneous} in homogeneous coordinates:
+\begin{align}
+\label{eq:homogeneous}
+\tilde{\textbf{p}}^R = T_{R}^{C} \tilde{\textbf{p}^C}
+\implies
+\begin{pmatrix}
+x^R \\
+y^R \\
+z^R \\
+1
+\end{pmatrix}
+=
+\begin{pmatrix}
+R & \textbf{t}\\
+\textbf{0} & 1
+\end{pmatrix} \begin{pmatrix}
+x^C \\
+y^C \\
+z^C \\
+1
+\end{pmatrix}
+\end{align}
+
+, where $\textbf{p}_R$ and $\textbf{p}_C$ are a 3D point in robot and camera coordinate frames, respectively, $T_R^C$ is the transformation between the robot and the camera frame, $R$ is the 3D rotation and $\textbf{t}$ is the translation vector. 
+
+R is computed from the yaw($\theta$), pitch ($\phi$) and roll ($\psi$) angles:
+\begin{align}
+R = R(\theta) R(\phi) R(\psi) = 
+\begin{pmatrix}
+\cos(\phi) & 0 & \sin(\phi) \\
+0 & 1 & 0 \\
+-\sin(\phi) & 0 & \cos(\phi) \\
+\end{pmatrix}
+\end{align}
+, since $\theta = \psi = 0$.
+
+To compute the translation vector, we require only one known 3D point in robot coordinates that we try to transform into the camera coordinate frame. To do that, we use a "calibration sheet" as shown in Figure XXXXX.
+
+
+We detect the four corners of the rectangle using a Fast Feature Detector from OpenCV and take the mass center as the known point. It is easy to extract the 3D coordinate by just getting it from the depth image. 
+Finally, we compute the translation vector applying Equation \ref{eq:translation}.
+\begin{align}
+\label{eq:translation}
+\textbf{t} = \textbf{p}^R - R \textbf{p}^C
+\end{align}
+
+This concludes the calibration, which provides a transformation from \texttt{robot} frame to \texttt{camera-link} frame, and is published to the \texttt{tf} tree afterwards. 
+
+\subsubsection{Tilt compensation}
+Sometimes the robot tilts forward when braking and this greatly affect the calibration. Therefore, we implemented a small solution to fix this using the IMU. We basically compute the tilting of the robot ($\phi^R$) taking the measurements from the accelerometer, $a_x$ and $a_z$:
+\begin{align}
+\phi^R = \tan^{-1} \left(\frac{|a_x - a_{x0}|}{a_z}\right)
+\end{align}
+
+Since the construction is not perfect, we first calibrate the IMU by storing the initial tilt, measured by $a_{x0}$. 
+
+Finally, the transformation between \texttt{robot} and \texttt{camera-link}, $T_0$, computed before, is corrected according to Equation \ref{eq:imu_tilt}.
+\begin{align}
+\label{eq:imu_tilt}
+T' = T_{\text{IMU}} \cdot T_0 = 
+\begin{pmatrix}
+R(\phi^R) & \textbf{0}\\
+\textbf{0} & 1 
+\end{pmatrix} T_0
+\end{align}
+
 \subsection{Object detection}
+The core of the computer vision component is divided into two modules. Object detection is mean to be fast (close to real-time computing time) and robust. Therefore, our aim was to optimize it as much as possible. The object detection pipeline is presented in Figure XXXXXX.
+
+
+\begin{enumerate}
+\item First, we subscribe to the RGB and Depth images from the camera (for which we use the \texttt{ApproximateTime} and \texttt{Synchronizer} packages in ROS) and build a point cloud out of them. The reason for doing this is that for some reason the PrimeSense did not publish its own point cloud at a fixed rate, and it was quite far from 30 Hz (e.g.: every 200 ms or so), which was unacceptable. To make it faster, we downsampled the images by a factor of 4 in X and Y. For transforming points from 2D to 3D, we reverted the projection equation, as shown in Equation \ref{eq:2dto3d}.
+
+\begin{align}
+\label{eq:2dto3d}
+X = z\cdot\frac{u - c_x}{f_x} \quad ; \quad
+Y = z\cdot\frac{v - c_y}{f_y} \quad ; \quad ;
+Z = z
+\end{align}
+
+where $\{X,Y,Z\}$ is the 3D point, $\{u,v\}$ is the 2D point from the RGB image, $z$ is the depth at the given point, and $c_x, c_y, f_x, f_y$ are the camera intrinsics, which we get from the \texttt{CameraInfo} message. 
+
+\item We transform the point cloud into the \texttt{robot} coordinate frame and extract the floor as a separate point cloud. This is done using a simple \texttt{PassThrough} filter, preserving the points whose \texttt{z} component is smaller than 0.01 m. We could have used the \texttt{Plane Segmentation} library from PCL, but this was more computationally expensive and would not always work since it would remove only the dominant plane, which might not be always the floor.
+
+\item A binary mask is created representing the floor by just reprojecting the floor point cloud extracted before. The process is done simply by reverting Equation \ref{eq:2dto3d} and getting $u$ and $v$. Since a subsampling was done at the beginning, it was necessary to apply dilation in order to have a solid mask.
+
+\item Next, the floor is removed from the original RGB image by an AND operation with the negated floor mask. Now it that the yellow floor will not trigger false positives, it is possible to perform \textbf{color filtering}. We select to do this in the HSV color space given its better robustness against illumination. This is performed using a bank of 5 color filters (red, green, blue, yellow, purple) with ranges in H and S manually tuned for the application. The function \texttt{inRange} of OpenCV is used to quickly perform this filtering. The result is a set of binary masks, from which we select the one with a larger color response. After that, we find contours and filter them by size (a minimum is required) and the aspect ratio (a maximum value of 2 is used). 
+
+If a contour still remains, it is likely that it belongs to an object. The biggest contour that fulfill these conditions is taken and a binary mask is created out of it using the \texttt{drawContours} function.
+
+\item In case a contour belonging to a coloured object was found, we compute the 3D position of its mass center both in robot and world coordinates. If the object has not been recognized yet, and if it is close enough to the robot (less than 30 cm from it), the recognition module is called.
+
+XXXXX Images from the process
+\end{enumerate}
+
 \subsection{Object recognition}
+
+
+
 \subsection{Obstacle detection}
