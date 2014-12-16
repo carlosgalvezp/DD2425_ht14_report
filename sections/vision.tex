@@ -119,8 +119,30 @@ Then, we tried several feature descriptors. We started with SHOT and PFHRGB, whi
 The computational time was also quite expensive (around 1-2 seconds), and it was not robust against illumination since it was using RGB data. We further tried shape-only descriptors (PFH and FPFH) without a significant increase in performance. Therefore we abandoned the idea of 3D-only recognition.
 
 \subsubsection{2D object recognition}
-RYAN
+The "2D vision" refers to object recognition using only the RBG image from the camera as input and ignore the depth information, 2D vision returns a belief in terms of probability (0\%-100\%) of which object it thinks is in the input image (85\% red cube, 13\% yellow ball for example). The 2D vision basically combines color information with shape information of an object for identification. The 2D vision was coded, tested and implemented to the robot but was not used during the context due to worse performance compared with 3D object recognition.
 
+The 2D vision contains 3 functions, one for circle recognition, one for triangle recognition and one for square recognition. The circles recognition function uses OpenCV built-in "Circle Hough Transform" method to find circular objects in an image. The triangle  and square recognition functions perform contour analysis to identify a triangle or a square in an image by analysing the number of lines in the contours and their crossing angles (for example a square always has 4 lines and 90 degrees between the lines). 2D vision also needed to perform some image transformations to the raw input RGB image before running the recognition algorithms to reach better performance and robustness, these transformations include resize/rescale of the original image, transforming RGB image into gray-scale image, Gaussian smoothing filter, Canny method to find contours in an image and finally dilate and erode images to remove single pixel objects and fill empty holes. See Figures \ref{fig:ryan1} and \ref{fig:ryan2}.
+
+\begin{figure}[h]
+        \centering
+        \begin{subfigure}[b]{0.4\linewidth}
+                \includegraphics[width=\textwidth]{figures/canny.jpg}
+                \subcaption{Canny method to find lines and contours.}
+                \label{fig:ryan1}
+        \end{subfigure}
+        \begin{subfigure}[b]{0.4\linewidth}
+                \includegraphics[width=\textwidth]{figures/squares.jpg}
+                \caption{Found squares}
+                \label{fig:ryan2}
+        \end{subfigure}
+        \caption{2D recognition example: square detection.}
+\end{figure}
+
+2D vision is perhaps the most "natural way" of how a robot can recognize objects, just like we humans, when we see an object we check out the color and the shape of the object and then decide/analyse what the object is. Unfortunately many problems can occur even in such a "controlled" environment such as the maze that makes the 2D vision very hard to be 100\% robust. Different light condition in the environment (due to weather, lamp, shadow etc), different rotation of how the object is placed in front of the camera, and noise from the camera and the environment (robot vibration, tape on the walls etc) can all make the 2D vision perform worse than expected. Resize/rescale the raw image was a method used to successfully reduce execution time of the algorithm; it could also be used to remove noise from the image. Another way to reduce image noise is Gaussian smoothing, however it also removes useful information such as object contours if the parameters are not chosen carefully, the same problems apply to dilate and erode method, essentially it is always a trade-off between removing unnecessary information and keeping useful information. Canny method was used for finding lines and contours in an image, it works best on gray-scale image so we must convert all image to gray-scale image. When converting an RGB image into a gray-scale image, if you already knew for example that the object being recognized is red, one smart way of doing it is to just split the RGB image into 3 channels and choose the R channel as your gray-scale image, this way most of the red contours are being saved compared with the normal OpenCV "RGB2GRAY" function. An attempt to fight against different light condition was to multiply the raw RGB image with different constants such as from 0.8 (to make the image darker) and 1.5 (to make the image brighter) with 0.1 intervals. This method greatly improved the recognition rate and made sure that at least the object will be detected in one or two light constants. However misdetection problem also followed and it also caused problem for calculating the probability of recognizing an object.
+
+Text below the images:
+Fig1: 
+Fig2: .
 \subsubsection{Final approach}
 The final approach was to determine a \textbf{probabilistic formulation} of the problem in order to gain in robustness and be able to reason about the certainty of the recognition. The most likely object $o^*$ was determined using a MAP estimate given the measurements in 3D shape $z^s$ and color $z^c$, according to Equation \ref{eq:obj_map}.
 
