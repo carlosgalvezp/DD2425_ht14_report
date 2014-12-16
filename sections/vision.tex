@@ -40,8 +40,7 @@ z^C \\
 
 R is computed from the yaw($\theta$), pitch ($\phi$) and roll ($\psi$) angles:with $\theta = \psi = 0$.
 
-To compute the translation vector, we require only one known 3D point in robot coordinates that we try to transform into the camera coordinate frame. To do that, we use a "calibration sheet" as shown in Figure XXXXX.
-
+To compute the translation vector, we require only one known 3D point in robot coordinates that we try to transform into the camera coordinate frame. To do that, we use a "calibration sheet" in which a square is drawn at a known position with respect to the robot.
 
 We detect the four corners of the rectangle using a Fast Feature Detector from OpenCV and take the mass center as the known point. It is easy to extract the 3D coordinate by just getting it from the depth image. 
 Finally, we compute the translation vector applying Equation \ref{eq:translation}.
@@ -71,6 +70,7 @@ R(\phi^R) & \textbf{0}\\
 \end{align}
 
 \subsection{Object detection}
+\label{sec:Object detection}
 The core of the computer vision component is divided into two modules. Object detection is mean to be fast (close to real-time computing time) and robust. Therefore, our aim was to optimize it as much as possible. The following pipeline was implemented.
 
 \begin{enumerate}
@@ -194,7 +194,7 @@ p(z^c = c | o ) = N_c / N_T
 , where $N_c$ is the number of pixels belonging to class $c$, and $N_T$ is the total number of pixels in the object mask. 
 
 \subsection{Obstacle detection}
-
+\label{sec:laser}
 In addition to the so-called "IR bumper" discussed before, an obstacle avoidance solution using the PrimeSense camera was implemented. The aim was to detect also objects right in front of the robot, especially the edge of walls that would not be detected by the front IR sensor.
 
 To do this, we simulated a laser scanner using the depth image. The implemented pipeline is as follows:
