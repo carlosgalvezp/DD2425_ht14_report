@@ -7,12 +7,14 @@ Odometry node takes raw data from motor encoders and translates it into global c
 
 \label{eq:odometry_eq}
 \begin{align}
-distance _{left} = \frac{2\pi * Wheel radius * encoder _{left}}{ticks  per  revolution}  \\
-distance _{right} = \frac{2\pi * Wheel radius * encoder _{right}}{ticks  per  revolution} \\
-\Delta x = \frac{distance _{left} + distance _{right}}{2} * cos(\Phi) \\
-\Delta y = \frac{distance _{left} + distance _{right}}{2} * sin(\Phi) \\
-\Delta \Phi = \frac{distance _{left} - distance _{right}}{Wheelbase}
+\Delta_{l} &= \frac{2\pi \cdot R \cdot n_{l}}{M}  \\
+\Delta_{r} &= \frac{2\pi \cdot R \cdot n_{r}}{M} \\
+\Delta x &= \frac{\Delta_{l} + \Delta_{r}}{2} \cdot \cos(\theta) \\
+\Delta y &= \frac{\Delta_{l} + \Delta_{r}}{2} \cdot \sin(\theta) \\
+\Delta \theta &= \frac{\Delta_{l} - \Delta_{r}}{B}
 \end{align}
+
+, where $\Delta_l$ and $\Delta_r$ are the distance travelled by the left and right wheel, respectively, $R$ is the wheel radius (assumed to be equal for both wheels), $n_l$ and $n_r$ is the number of ticks that the corresponding has rotated, $M = 360$ is the number of ticks per revolution, $B$ is the distance between wheels and $\Delta x$, $\Delta y$ and $\Delta\theta$ is the change in robot pose in $x,y$ and $\theta$ (in global coordinates).
 
 
 
