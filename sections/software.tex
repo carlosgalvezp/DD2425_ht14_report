@@ -31,9 +31,28 @@ Mapping is done in a separate node called mapping. We create 3 different maps of
 
 For the raw and thick map the free cells were calculated in similar fashion. Every cell that the robot went over, gets set to a free cell, no matter the value before. All cells touched by the IR sensors on the sides, up to a certain maximum distance or up until we get an occupied reading, also gets set to free cell. All cells in between the end and start points of the 2 sensors on each side gets set to free. However these cells do not overwrite occupied cells since we are just assuming that the area is free. The reason for why this is done is to make sure we do not leave behind lonely unknown cells that can influence the path planning. Furthermore to make the path planning more stable and react faster on close walls in front of the robot, we set all cells 10 cm ahead of the robot to free cells. These also of course do not overwrite occupied cells since we have no assurance that the cells are in fact not occupied by something. 
 
+\begin{figure}[h]
+        \centering
+        \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+                \includegraphics[height=3cm]{figures/raw_map.png}
+                \subcaption{Raw map}
+                \label{fig:raw_map}
+        \end{subfigure}        
+        \begin{subfigure}[b]{0.45\linewidth}
+        \centering
+                \includegraphics[height=3cm]{figures/thick_map.png}
+                \caption{Thick map}
+                \label{fig:thick_map}
+        \end{subfigure}
+        \caption{Generated maps}
+        \label{fig:maps}
+\end{figure}
+
 \subsubsection{Raw map}
 The raw map does no special processing when detecting occupied area. Initially all area is unknown and by driving around and getting corresponding data from IR sensors, free area and occupied area (obstacles and walls) are detected and drawn in map. The four short IR sensors on the sides of the robot provide data about distances to the walls. This data together with position information from odometry node are the basic ingredients to create the map.
-We also use the laser scanner mentioned in secion \ref{sec:Obstacle detection} to fill occupied cells in front of the robot. And finally we use the coordinates of detected objects mentioned in \ref{sec:Object detection} to make sure we will fill cells occupied by objects.
+We also use the laser scanner mentioned in section \ref{sec:Obstacle detection} to fill occupied cells in front of the robot. And finally we use the coordinates of detected objects mentioned in \ref{sec:Object detection} to make sure we will fill cells occupied by objects. The raw map can be observed in Figure \ref{fig:raw_map}.
+
 
 \subsubsection{Thick map}
 The basic map, or raw map, we only use as an intermediate step in creating the processed map, also called the thick map because of how it visually looks. The reason for this maps existence is that the data from the sensors is quite noisy, therefore some processing is needed to mitigate the noisy results and also to build a more solid map to be used for path planning. Compare Figure XXXX with Figure XXXX.
@@ -57,7 +76,8 @@ The main problem with this method was that depending on the threshold we either 
 \item Repeat steps 1-3. 
 \end{enumerate}
 
-This worked really well for both noise cancellation and for creating solid occupied area. The reason is that in order to get noisy data, we would need at least 7 noisy coordinates within a 10 cm area instead of having just 2 bad readings in close proximity like with the first method. Also, since all points are stored in the map and none removed, we rarely create a gap in the walls. The main reason for the choice of 11 cm in step 1 is that this results in the walls bulking out roughly 12 cm, see Figure XXXX. This is about half the robots width so as long as the robots center position is at a free cell, it would theoretically never hit a wall. This method also made it easy to update the map, or repainting, since we only change some values around a cell in the thick map when repainting that cell in the raw map.
+This worked really well for both noise cancellation and for creating solid occupied area. The reason is that in order to get noisy data, we would need at least 7 noisy coordinates within a 10 cm area instead of having just 2 bad readings in close proximity like with the first method. Also, since all points are stored in the map and none removed, we rarely create a gap in the walls. The main reason for the choice of 11 cm in step 1 is that this results in the walls bulking out roughly 12 cm, see Figure \ref{fig:thick_map}. This is about half the robots width so as long as the robots center position is at a free cell, it would theoretically never hit a wall. This method also made it easy to update the map, or repainting, since we only change some values around a cell in the thick map when repainting that cell in the raw map. 
+
 
 \subsubsection{Cost map}
 The cost map was created for the path planner to be able to create a path that tries to stay at some distance away from the walls, see Figure XXXX. Without it the path planner would simply take the shortest possible path which would greatly increase the risk of crashing. One might initially think that you could just increase the threshold of 11 cm in the thick map. However, that leads to an increased risk of accidentally filling a entrance completely because of noise. So the cost map can be seen as a complementary map to the thick map. The cost map is created in similar fashion as a potential field where the only thing that changes the cost, or potential, of each cell are the occupied cells in the thick map. It works similarly as the chosen method for the thick map but instead of reacting to occupied cells in the raw map, it reacts on occupied cells in the thick map. So when an occupied cell is added, each cell within some threshold, 20 cm in our final setup, gets its cost increased. The only difference is that we increase the cost the most closests to the occupied cell in question, and the least at the distance of 20 cm. Initially the cost was calculated using the raw map but that led to a quite unfair distribution of cost. This was because the raw map could have large relative differences in compactness of occupied cells at different wall segments, compare Figure XXXX with Figure XXXX. 
