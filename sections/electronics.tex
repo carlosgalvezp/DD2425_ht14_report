@@ -18,10 +18,10 @@ Because of non-linear sensor output vs distance curve it is not practical to use
 
 \subsubsection{Filtering}
 
-To filter out the noise from the IR sensors a set of independent Kalman Filters XXXXX REF is used due to its simplicity and ability to directly model the sensor and process noise. 
+To filter out the noise from the IR sensors a set of independent Kalman Filters \cite{Thrun} is used due to its simplicity and ability to directly model the sensor and process noise. 
 In particular, we consider the following process and measurement models:
 \begin{align*}
 x_{t+1} &= x_t + \epsilon \\
 z_t &= x_t + \delta
 \end{align*}
-, where $\epsilon \sim \mathcal{N}(0,Q)$ and $\delta \sim \mathcal{N}(0,R)$. A value of $R = 0.01$, $Q = 0.04$ was chosen in order to effectively filter but not reduce the bandwidth (responsiveness) too much. XXXX figure?
+, where $\epsilon \sim \mathcal{N}(0,Q)$ and $\delta \sim \mathcal{N}(0,R)$. A value of $R = 0.01$, $Q = 0.04$ was chosen in order to effectively filter but not reduce the bandwidth (responsiveness) too much. 
