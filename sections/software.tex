@@ -180,7 +180,7 @@ Following the theory from the Applied Estimation course \cite{Applied}, we found
 
 The implementation followed the instructions in \cite{Applied}, but the results were not so good. A really large process noise ($Q$) and really low measurement noise ($R$) was required to notice some updated in the position. However, we discarded this idea when we realized that the localization could be non-unique: the same $\theta$ and $\rho$ could be obtained at any position on a circle of radius $\rho$ around the object, given a proper orientation for the robot. In addition, the object's position would not be stable enough to heavily rely on this information. 
 
-\subsubsection{Theta correction}
+\subsubsection{Orientation correction}
 A solution which did work was to compute the actual orientation of the robot from it's orientation with respect to the wall. 
 
 From this, the difference in angle, $\Delta\theta$, can be computed as:
@@ -199,7 +199,7 @@ This was applied when starting the robot and it worked pretty well; however this
 Finally, we implemented a promising idea for localization, but we did not have the time to test and debug it properly. The algorithm is as follows:
 
 \begin{itemize}
-\item The current pose estimate ${x_0, y_0, theta_0}$ and a map (occupancy grid) are given.
+\item The current pose estimate ${x_0, y_0, \theta_0}$ and a map (occupancy grid) are given.
 
 \item The orientation ($\theta$) is updated according to the previous section.
 
