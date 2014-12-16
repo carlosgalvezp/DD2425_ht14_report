@@ -31,6 +31,41 @@ For exploration there was created navigation node.
 \subsubsection{Local}
 
 \subsubsection{Global}
+The global path planning consists on determining the fastest sequence of objects to be visited. This is applied in Phase 2 during the contest. 
+
+This is a classical formulation of the Travelling Salesman Problem (TSP). XXXXX ref Here objects can be considered as nodes within a graph and edges that connect them with some cost.
+
+In our particular case, we propose the following formulation:
+\begin{itemize}
+\item The nodes are \textbf{not} the object's position, but the position from which the robot first saw the object instead. This is done to make the path planning easier: since the objects are commonly really close to walls, we might not even find a path to them considering that it is computed is the "thickened" map. 
+\item The cost between two objects is measured in terms of the \textbf{travel distance}, measured as the size of the path computed from running a Best-First Search from one object to another. This metric is much better than just using the Euclidean Distance between objects (for example, consider the case where the objects are separated by just a wall but the robot cannot go through that wall and has to turn around instead). Even a more accurate metric would include an additional cost for turning, but we did not include this in our formulation.
+\end{itemize}
+
+Therefore, after Phase 1 we can create a high-level graph connecting all the object's positions with the associated costs. 
+
+\textbf{Solution: Genetic Algorithm}\\
+Once the TSP problem, we find the best solution for it. As XXXXX shows, this is an NP-hard problem, which means it cannot be solved in polynomial time with standard search algorithms. Instead, a very elegant solution is to use a Genetic Algorithm (GA) XXXX ref, which we apply to this particular problem. The main advantages for this is that it is simple to implement and understand, really scalable and offers a good trade-off between computational time and optimality. 
+
+The mechanism behind the GA is quite common and the reader is referred to XXXX to get more details about it. We will mention here the relevant details:
+\begin{itemize}
+\item \textbf{Codification}. Genetic algorithms work with strings of chromosomes, so we need to somehow encode the graph information into a string. For this, we gave an integer ID number to each of the nodes, and formed a string as a sequence of IDs (see Figure XXXX).
+\item \textbf{Fitness function}. It determines the performance of a single individual from a generation. We choose the fitness of individual $i$ to be:
+\begin{align}
+f(i) = \left[\sum_{i = 1}^{N-1} C(i,i+1)\right]^{-1}
+\end{align}
+, where $C(i, i+1)$ is the travel cost of going from node $i$ to node $i+1$, and $N$ is the total number of nodes.
+\item Parameters. 
+\begin{itemize}
+\item Number of generations: 2000.
+\item Number of individuals per generation: 100
+\item Number of ellite individuals: 2
+\item Cross-over probability: 0.7
+\item Mutation probability: 0.05
+\end{itemize}
+\end{itemize}
+
+This implementation gave excellent results, with nearly optimal solutions under a reduced time (around 1.0 s on the NUC). Figure XXXX shows an example test with a graph with 20 nodes. 
+
 
 
 \subsection{Localization}
