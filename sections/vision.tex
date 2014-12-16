@@ -205,7 +205,7 @@ p(z^s = \text{other} | o) = 1.0 - N_d/N_T
 These three probabilities are normalized afterwards so that they add up to 1.
 
 \textbf{Color probability}\\
-In this task, it is not possible to recognize all the objects without color information. For this we implemented a Bayes Classifier XXXX ref on the HSV color model. We currently only use the H and S components, which influence most the outcome. 
+In this task, it is not possible to recognize all the objects without color information. For this we implemented a Bayes Classifier following \cite{Bayes}, on the HSV color model. We currently only use the H and S components, which influence most the outcome. 
 
 The first step is to create a \textbf{color model}. We decided to have independent Gaussian distributions for 7 colors (red, green, blue, yellow, purple, orange, light green) and for each of the channels (H and S), so the total number of parameters is $7 \cdot 2 \cdot 2$ = 28. For every color, the model ${\mu_h, \sigma_h, mu_s, \sigma_s}$ is computed from training data. In particular, 50 pictures from each of the 10 objects were taken at different positions and different light conditions. In sum, 500 pictures form the color model. An application was implemented in order to speed up the capture of data. In particular, the application would cut out an image from a predefined region of interested at a fixed rate (e.g.: every 5 seconds). Finally, the color model was computed by extracting the mean and variance values for each color and channel.
 
