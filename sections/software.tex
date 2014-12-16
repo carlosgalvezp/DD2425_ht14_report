@@ -55,7 +55,7 @@ We also use the laser scanner mentioned in section \ref{sec:Obstacle detection} 
 
 
 \subsubsection{Thick map}
-The basic map, or raw map, we only use as an intermediate step in creating the processed map, also called the thick map because of how it visually looks. The reason for this maps existence is that the data from the sensors is quite noisy, therefore some processing is needed to mitigate the noisy results and also to build a more solid map to be used for path planning. Compare Figure XXXX with Figure XXXX.
+The basic map, or raw map, we only use as an intermediate step in creating the processed map, also called the thick map because of how it visually looks. The reason for this maps existence is that the data from the sensors is quite noisy, therefore some processing is needed to mitigate the noisy results and also to build a more solid map to be used for path planning. Compare Figure \ref{fig:raw_map} with Figure \ref{fig:thick_map}.
 
 Our first approach to minimize the noise and the gaps in the wall was the following:
 
@@ -107,7 +107,7 @@ See Figure XXXX for an example path to unknown area. The reason for the first se
 \subsubsection{Global path planning}
 The global path planning consists on determining the fastest sequence of objects to be visited. This is applied in Phase 2 during the contest. 
 
-This is a classical formulation of the Travelling Salesman Problem (TSP). XXXXX ref Here objects can be considered as nodes within a graph and edges that connect them with some cost.
+This is a classical formulation of the Travelling Salesman Problem (TSP). Here the objects can be considered as nodes within a graph and edges that connect them with some cost.
 
 In our particular case, we propose the following formulation:
 \begin{itemize}
@@ -120,9 +120,9 @@ Therefore, after Phase 1 we can create a high-level graph connecting all the obj
 \textbf{Solution: Genetic Algorithm}\\
 Once the TSP problem, we find the best solution for it. A very elegant solution to solve is to use a Genetic Algorithm (GA) \cite{genetic}, which we apply to this particular problem. The main advantages for this is that it is simple to implement and understand, really scalable and offers a good trade-off between computational time and optimality. 
 
-The mechanism behind the GA is quite common and the reader is referred to XXXX to get more details about it. We will mention here the relevant details:
+The mechanism behind the GA is quite common and the reader is referred to \cite{genetic} to get more details about it. We will mention here the relevant details:
 \begin{itemize}
-\item \textbf{Codification}. Genetic algorithms work with strings of chromosomes, so we need to somehow encode the graph information into a string. For this, we gave an integer ID number to each of the nodes, and formed a string as a sequence of IDs (see Figure XXXX).
+\item \textbf{Codification}. Genetic algorithms work with strings of chromosomes, so we need to somehow encode the graph information into a string. For this, we gave an integer ID number to each of the nodes, and formed a string as a sequence of IDs.
 \item \textbf{Fitness function}. It determines the performance of a single individual from a generation. We choose the fitness of individual $i$ to be:
 \begin{align}
 f(i) = \left[\sum_{i = 1}^{N-1} C(i,i+1)\right]^{-1}
@@ -138,8 +138,7 @@ f(i) = \left[\sum_{i = 1}^{N-1} C(i,i+1)\right]^{-1}
 \end{itemize}
 \end{itemize}
 
-This implementation gave excellent results, with nearly optimal solutions under a reduced time (around 1.0 s on the NUC). Figure XXXX shows an example test with a graph with 20 nodes. 
-
+This implementation gave excellent results, with nearly optimal solutions under a reduced time (around 1.0 s on the NUC). 
 \subsubsection{Exploration, phase 1}
 
 The abstract view of the exploration phase is quite simple. It looks like following:
@@ -177,19 +176,20 @@ Because of problems with localization we had a hard time running phase 2 succesf
 Given the lack of time for the project, it was not possible to achieve a fully working localization module, which was really an impediment for running Phase 2. The following solutions were tested.
 
 \subsubsection{EKF Localization}
-Following the theory from the Applied Estimation course (XXX REF), we found out that a good solution was to use an Extended Kalman Filter (XXXX REF) to solve this problem. It would use as input $u$ the data from the encoders, and the measurements would come from a \emph{range-and-bearing} sensor, which provides the distance and angle to a recognized object in the map relative to the robot, as shown in Figure XXXX.
+Following the theory from the Applied Estimation course \cite{Applied}, we found out that a good solution was to use an Extended Kalman Filter \cite{Thrun} to solve this problem. It would use as input $u$ the data from the encoders, and the measurements would come from a \emph{range-and-bearing} sensor, which provides the distance and angle to a recognized object in the map relative to the robot.
 
-The implementation followed the instructions in XXXXX REF, but the results were not so good. A really large process noise ($Q$) and really low measurement noise ($R$) was required to notice some updated in the position. However, we discarded this idea when we realized that the localization could be non-unique: the same $\theta$ and $\rho$ could be obtained at any position on a circle of radius $\rho$ around the object, given a proper orientation for the robot. In addition, the object's position would not be stable enough to heavily rely on this information. 
+The implementation followed the instructions in \cite{Applied}, but the results were not so good. A really large process noise ($Q$) and really low measurement noise ($R$) was required to notice some updated in the position. However, we discarded this idea when we realized that the localization could be non-unique: the same $\theta$ and $\rho$ could be obtained at any position on a circle of radius $\rho$ around the object, given a proper orientation for the robot. In addition, the object's position would not be stable enough to heavily rely on this information. 
 
 \subsubsection{Theta correction}
-A solution which did work was to compute the actual orientation of the robot from it's orientation with respect to the wall. This can be shown in Figure XXXXX
-
+A solution which did work was to compute the actual orientation of the robot from it's orientation with respect to the wall. 
 
 From this, the difference in angle, $\Delta\theta$, can be computed as:
 \begin{align}
 \label{eq:locTheta}
 \Delta\theta = \tan^{-1}\left(\frac{d_2 - d_1}{D}\right)
 \end{align}
+
+, where $d_1$ is the front sensor and $d_2$ is the back sensor on either side of the robot, and $D$ is the separation between those sensors. 
 
 Finally, we assume the robot has an orientation $\theta0 \in \{-\pi, -\pi/2, 0, \pi/2, \pi\}$, so the final pose estimate is given by: $\theta = \theta0 + \Delta\theta$.
 
