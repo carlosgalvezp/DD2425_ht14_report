@@ -72,7 +72,7 @@ The path planner has a separate node since it can take up to 1 second to compute
 \item Return the path as a sequence of cells.
 \end{enumerate}
 
-See Figure XXXX for an example path to unknown area. The reason for the double search is that want to give some priority for finding unknown cells in front of the robot. The second search is because we want the path to origin from the center of the robot. Step 3 actually uses the second functionality of the path planner. That is to go from point A to point B.
+See Figure XXXX for an example path to unknown area. The reason for the double search is that want to give some priority for finding unknown cells in front of the robot. The second search is because we want the path to origin from the center of the robot. Step 3 actually uses the second functionality of the path planner. That is to go from point A to point B. When we try to navigate using a path given by the path planner we have several procedures to select a certain point in the path and then we calculate the angle to that point and try to align the robot to that angle.
 
 \subsubsection{Global path planning}
 The global path planning consists on determining the fastest sequence of objects to be visited. This is applied in Phase 2 during the contest. 
@@ -124,7 +124,7 @@ The abstract view of the exploration phase is quite simple. It looks like follow
 \item Stop when home.
 \end{enumerate}
 
-Under the hood we do a lot more obviously but these are the core elements. For instance when following the current path that we have, we try to go towards the point in the path that is as far away from the robot as possible where the line between the robots center position and the point in question does not come within a certain distance from a occupied node. This makes sure that the robot does not rapidly change direction just because the path changes a lot locally.
+Under the hood we do a lot more obviously but these are the core elements. For instance when following the current path that we have, we try to go towards the point in the path that is as far away from the robot as possible where the line between the robots center position and the point in question does not come within a certain distance from a occupied node. This makes sure that the robot does not rapidly change direction just because the path changes a lot locally. If you look at Figure XXXX where the path starts to zigzag quite a lot, you get a good example for when this helps stabalize the robots movement. 
 
 \subsubsection{Retrieving objects, phase 2}
 
@@ -137,9 +137,11 @@ This is the abstract view of phase 2 where we try to retrieve the objects:
 \item When reached within a certain threshold, stop.
 \item Turn the robot against the object for easier recognition and stop for a short amount of time.
 \item Repat steps 1-5 until the queue is empty.
-\item Change path planner to look for a path towards coordinate (0,0), aka. go home.
+\item Change the path planner to look for a path towards coordinate (0,0), aka. go home.
 \item Stop when home.
 \end{enumerate}
+
+Because of problems with localization we had a hard time running phase 2 succesfully since it would eventually crash into a wall.
 
 \subsection{Localization}
 Given the lack of time for the project, it was not possible to achieve a fully working localization module, which was really an impediment for running Phase 2. The following solutions were tested.
