@@ -18,19 +18,63 @@ distance _{right} = \frac{2\pi * Wheel radius * encoder _{right}}{ticks  per  re
 
 
 \subsection{Mapping}
+Mapping is done in a separate node called mapping. We create 3 different maps of the same sizes. The raw map, the thick map, and the cost map. For the raw and thick map we chose to use the occupancy grid package from ROS. We use three distinct values that each represents unknown, free or occupied area. For the cost map we simply used an int array in the form of s ROS message of type Int64MultiArray.
 
-For map we chose to use occupancy grid package from ROS. IR sensors provide data about distances to the walls. This data together with position information from odometry node are used to make a map. Initially all area is unknown and by driving around and getting corresponding data from IR sensors free area and obstacles are detected and drawn in map. Data from sensors are quite noisy therefore some processing is needed to mitigate noisy results.
+In the raw map and thick map the free cells were calculated in similar fashion. Every cell the robot went over, gets set to a free cell, no matter the value before. All cells touched by the IR sensors on the sides, up to a certain maximum distance or up until we get an occupied reading, gets set to free cell. All cells in between the end and start points of the 2 sensors on each side gets set to free. However these cells do not overwrite occupied cells since we can not for sure know what is in between the sensors. The reason for why this is done is to make sure we do not leave behind lonely unknown cells that can influence the path planning. To make the path planning more stable and react faster on walls in front of the robot, we set all cells 10 cm ahead of the robot to free. These also of course do not overwrite occupied cells since we have no assurance that the cells are in fact not occupied by something. 
 
-\subsection{Exploration}
+\subsubsection{Raw map}
+The raw map does no special processing when detecting occupied area. Initially all area is unknown and by driving around and getting corresponding data from IR sensors, free area and occupied area (obstacles and walls) are detected and drawn in map. The four short IR sensors on the sides of the robot provide data about distances to the walls. This data together with position information from odometry node are the basic ingredients to create the map
 
-For exploration there was created navigation node. 
+\subsubsection{Thick map}
+The basic map, or raw map, we only use as an intermediate step in creating the processed map, also called the thick map because of how it visually looks. This map exists since data from sensors are quite noisy, therefore some processing is needed to mitigate noisy results and also to build a more solid map to be used for path planning.
+
+Our first approach to minimize the noise and gaps in the wall was the following:
+
+\begin{enumerate}
+\item For each IR sensor, if that sensor detects something, save the corresponding coordinate.
+\item When a sensor once again detects something. Compute the distance to the previously saved coordinate.
+\item If the computed distance is lower than a certain threshold, we fill every cell in between these points as occupied cells. If not, then we just throw away the saved point.
+\item The second coordinate retrieved now becomes the saved coordinate in step 1.
+\item Repeat steps 2-4.
+\end{enumerate}
+
+The main problem with this method was that the noise was too great so depending on the threshold we either got too many gaps in the map, especially at corners, or we got noisy lines that impacted the path planning too much. We tried several different works around for this, both for limiting the noise and gaps and for reducing the negative impact for path planning with noise and gaps. But the solutions were simply not good enough and quickly became complex. We replaced this method with another method. that works as following:
+
+\begin{enumerate}
+\item When an IR sensor detects something, each cell within a certain threshold, 11 cm in our final setup, gets some value increased by one. 
+\item It is not until the value of a cell reaches a certain threshold, 7 in our final setup, that it becomes an occupied cell. 
+\item If the value should drop below 7, it would turn back into a free cell.
+\item Repeat steps 1-3. 
+\end{enumerate}
+
+This worked really well for both noise cancellation and for creating solid occupied area. The reason is that in order to get bad data, we would need at least 7 noisy coordinates within a 10 cm area instead of having just 2 bad readings in close proximity like with the first method. Also, since all points are stored in the map and none removed, we rarely create a gap in the walls. The main reason for the choice of 11 cm in step 1 is that this results in the walls bulking out roughly 12 cm. This is about half the robots width so if the robots center position is at a free cell, it would theoretically never hit a wall. This method also made it easy to update the map, or repainting, since we basically only lower or increase some values around a cell when repainting in the raw map.
+
+\subsubsection{Cost map}
+The cost map was created for the path planner to be able to create a path that tries to stay at some distance away from the walls. Without it the path planner would simply take the shortest possible path which would greatly increase the risk of crashing. One might initially think that you could just increase the threshold of 11 cm in the thick map. However, that leads to an increased risk of accidentally filling a entrance completely because of noise. So the cost map can be seen as a complementary map to the thick map. The cost map is created in similar fashion as a potential field where the only thing that changes the cost, or potential, of each cell are the occupied cells in the thick map. It works similarly as the chosen method for the thick map but instead of reacting to occupied cells in the raw map, it reacts on occupied cells in the thick map. So when an occupied cell is added, each cell within some threshold, 20 cm in our final setup, gets its cost increased. The only difference is that we increase the cost the most closests to the occupied cell in question, and the least at the distance of 20 cm. Initially the cost was calculated using the raw map but that led to quite unfair distribution of cost. This was because the raw map could have large relative differences in compactness of occupied cells at different wall segments. 
+
+An important detail is that the cost distribution can not be linear. If it would, all free cells in between occupied area would roughly get the same value. In our robot, we chose the exponential value 1.5 that simply worked well enough. There are several other parameters that could be mentioned, for example the default value that the cells have before any cost is applied. A too low default value results in that cells that touches some cost distribution might very rarely be considered for the path planner, which in turns leads to poorly chosen routes. A too high value results in that the path planner does not care about the cost at all, since it is roughly the same. However, to get the cost map to work you just needs an somewhat even non-linear distribution. 
+
+
+\subsection{Navigation}
+For navigation the navigation node was created. We wanted to be able explore the entire maze and first we tried using wall following together with a topological map but later changed to path planning. 
 
 \subsubsection{Wall following}
-\subsubsection{BFS Search}
-\subsection{Path planning}
-\subsubsection{Local}
+The setup was quite straight forward. We tuned 3 PID’s. One was simply for following the wall. The other was for keeping a certain distance to a wall. The third was to turn as close as possible to 90 degrees. Everything actually worked pretty great and we had this setup for the first milestones. However when we started building the topological map we realized that it will be very hard to try to explore the entire maze. Questions started to arise such as how will we handle large open areas? How to deal with multiple entrances next to each other that are only separated by a slim wall segment? We realized that this might get quite complex quickly. So we chose to disband this form of navigation in favor of a more general solution.
 
-\subsubsection{Global}
+\subsubsection{Path planning}
+The path planner has a separate node since it can take up to 1 second to compute the path on a maze of size 16 m². The path planner is essentially a greedy best-first search trough the cost map and thick map. How the path planner finds a path to a unknown looks as following:
+
+\begin{enumerate}
+\item Start the greedy best-first search from the robots front position using the cost map.
+\item Never accept a step into an occupied cell in the thick map.
+\item Expand the search until you hit a cell with the status unknown.
+\item Redo the search from the robots center position until we hit the cell found in step 2.
+\item Return the path as a sequence of cells.
+\end{enumerate}
+
+The reason for the double search is that want to give some priority for finding unknown cells in front of the robot. The second search is because we want the path to origin from the center of the robot. Step 3 actually uses the second functionality of the path planner. That is to go from point A to point B.
+
+\subsubsection{Global path planning}
 The global path planning consists on determining the fastest sequence of objects to be visited. This is applied in Phase 2 during the contest. 
 
 This is a classical formulation of the Travelling Salesman Problem (TSP). XXXXX ref Here objects can be considered as nodes within a graph and edges that connect them with some cost.
@@ -115,3 +159,34 @@ J(x,y) = \sum_{i = 1}^6 (z_i - \hat{z}_i)
 
 
 This approach would give the optimal robot position assuming that the saved map was perfect and we were given perfect sensor readings. Unfortunately this was not the case. In addition, another challenging question is when to run this procedure. Ideally, it would be better to run it after 90-degree turns, but again that was not used in the robot anymore. We are confident that a little bit more time to improve this and test would have probably resulted in satisfactory results.
+
+\subsection{Exploration, phase 1}
+
+The abstract view of the exploration phase is quite simple. It looks like following:
+
+\begin{enumerate}
+\item Set path planner to search for unknown area.
+\item Follow the path.
+\item Purge points along the path that we have already passed by checking what point in the path we are closest too at the moment.
+\item If we receive information about an object detected at some coordinate. Change path planner to look for a path close to this object for easier object classification. Once path is reached set the path planner to continue to search for unknown area.
+\item Repeat steps 1-4 until the path planner starts sending empty paths. 
+\item Change path planner to look for a path towards coordinate (0,0), aka. go home.
+\item Stop when home.
+\end{enumerate}
+
+Under the hood we do a lot more obviously but these are the core elements. For instance when following the current path that we have, we try to go towards the point in the path that is as far away from the robot as possible where the line between the robots center position and the point in question does not come within a certain distance from a occupied node. This makes sure that the robot does not rapidly change direction just because the path changes a lot locally.
+
+\subsection{Retrieving objects, phase 2}
+
+This is the abstract view of phase 2 where we try to retrieve the objects:
+
+\begin{enumerate}
+\item Retrieve the list of object positions as a queue, that was stored in a certain order according to the global path planner.
+\item Pop the next object position and set the path planner to find this position.
+\item Follow the path.
+\item When reached within a certain threshold, stop.
+\item Turn the robot against the object for easier recognition and stop for a short amount of time.
+\item Repat steps 1-5 until the queue is empty.
+\item Change path planner to look for a path towards coordinate (0,0), aka. go home.
+\item Stop when home.
+\end{enumerate}
